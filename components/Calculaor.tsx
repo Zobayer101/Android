@@ -1,114 +1,235 @@
 import React, {useState} from 'react';
-
+import FontAwesome from 'react-native-vector-icons/AntDesign';
+import Arrow from 'react-native-vector-icons/FontAwesome';
+import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import {
   //Keyboard,
   SafeAreaView,
   StyleSheet,
   Text,
   TextInput,
+  TouchableOpacity,
   View,
+  Vibration,
 } from 'react-native';
 
-const Calculator = () => {
-  const [data, setData] = useState('');
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
-  var result = () => {
-    // eslint-disable-next-line no-eval
-    let r = eval(data);
-    setData(`${r}`);
+const Calculator = (props: {
+  navigation: {navigate: (arg0: string) => void};
+}) => {
+  //main state difaine..
+  const [data, setData] = useState('');
+  const [bracket, setBracket] = useState(true);
+
+  //result isFoalt or not chack;
+  const isFoalt = (num: number) => {
+    return !!(num % 1);
   };
-  // console.log(eval(data));
+
+  //Set storage Item..
+  const LocalStorage = async (cal: string, res: string) => {
+    try {
+      let isData = await AsyncStorage.getItem('history');
+      //console.log(isData);
+      if (!isData) {
+        let setItem = [{id: 1, cal, res, date: new Date().toLocaleString()}];
+        await AsyncStorage.setItem('history', JSON.stringify(setItem));
+      } else if (isData) {
+        let ArrayData = JSON.parse(isData);
+        let setItem = [
+          ...ArrayData,
+          {
+            id: ArrayData.length + 1,
+            cal,
+            res,
+            date: new Date().toLocaleString(),
+          },
+        ];
+        await AsyncStorage.setItem('history', JSON.stringify(setItem));
+      }
+      //await AsyncStorage.removeItem('history');
+    } catch (error) {
+      Vibration.vibrate(300);
+    }
+  };
+
+  //state data calculate..
+  var result = () => {
+    try {
+      // eslint-disable-next-line no-eval
+      let r = eval(data);
+      if (r === undefined) {
+        setData('⚠');
+        Vibration.vibrate(150);
+      } else {
+        if (isFoalt(r)) {
+          LocalStorage(data, r.toFixed(6));
+          setData(`${r.toFixed(6)}`);
+        } else {
+          LocalStorage(data, r);
+          setData(`${r}`);
+        }
+      }
+      Vibration.vibrate(50);
+    } catch (e) {
+      Vibration.vibrate(200);
+    }
+  };
+
+  const Brackets = () => {
+    if (bracket) {
+      setData(a => (a += '('));
+      setBracket(false);
+    } else {
+      setData(a => (a += ')'));
+      setBracket(true);
+    }
+  };
+
   return (
     <View style={styles.Body}>
       <SafeAreaView>
-        <Text style={styles.text}>@zobayer</Text>
         <TextInput
           style={styles.input}
           selectionColor="#35fd03"
           autoFocus
           value={data}
-          keyboardType="decimal-pad"
-          // onFocus={() => Keyboard.dismiss()}
+          // keyboardType="decimal-pad"
+          //onFocus={() => Keyboard.dismiss()}
+          showSoftInputOnFocus={false}
         />
         <View style={styles.Allbtn}>
-          <Text
-            style={styles.crossllbtn}
-            onPress={() => setData( data.toString().slice(0 , -1))}>
-            X
-          </Text>
+          <TouchableOpacity
+            onPress={() => setData(data.toString().slice(0, -1))}>
+            <Arrow
+              name="long-arrow-left"
+              size={40}
+              color={'#f4f'}
+              style={styles.ReadArrow}
+            />
+          </TouchableOpacity>
           <View style={styles.nextSection}>
-            <Text style={styles.crossllbtn}>L</Text>
-            <Text style={styles.crossllbtn}>W</Text>
-            <Text style={styles.crossllbtn}>H</Text>
+            <TouchableOpacity
+              onPress={() => props.navigation.navigate('History')}>
+              <FontAwesome name="clockcircleo" size={30} color="#0f8" />
+            </TouchableOpacity>
+            <TouchableOpacity
+              onPress={() => props.navigation.navigate('Scale')}>
+              <MaterialCommunityIcons name="scale" size={30} color="#ff4" />
+            </TouchableOpacity>
           </View>
         </View>
         <View style={styles.Round} />
         <View style={styles.BtnRow}>
-          <Text style={styles.FontBtn} onPress={() => setData('')}>
-            C
-          </Text>
-          <Text style={styles.FontBtn}>()</Text>
-          <Text style={styles.FontBtn} onPress={() => setData(a => (a += '%'))}>
-            %
-          </Text>
-          <Text style={styles.FontBtn} onPress={() => setData(a => (a += '/'))}>
-            /
-          </Text>
+          <TouchableOpacity onPress={() => setData('')}>
+            <Text style={styles.Clear}>C</Text>
+          </TouchableOpacity>
+          <TouchableOpacity onPress={Brackets}>
+            <Text style={styles.FontBtn}>( )</Text>
+          </TouchableOpacity>
+          <TouchableOpacity onPress={() => setData(a => (a += '%'))}>
+            <Text style={styles.FontBtn}>%</Text>
+          </TouchableOpacity>
+          <TouchableOpacity onPress={() => setData(a => (a += '/'))}>
+            <Text style={styles.FontBtn}>÷</Text>
+          </TouchableOpacity>
         </View>
         <View style={styles.BtnRow}>
-          <Text style={styles.FontBtn} onPress={() => setData(a => (a += '7'))}>
-            7
-          </Text>
-          <Text style={styles.FontBtn} onPress={() => setData(a => (a += '8'))}>
-            8
-          </Text>
-          <Text style={styles.FontBtn} onPress={() => setData(a => (a += '9'))}>
-            9
-          </Text>
-          <Text style={styles.FontBtn} onPress={() => setData(a => (a += '*'))}>
-            x
-          </Text>
+          <TouchableOpacity
+            onPress={() => {
+              setData(a => (a += '7'));
+            }}>
+            <Text style={styles.Number}>7</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            onPress={() => {
+              setData(a => (a += '8'));
+            }}>
+            <Text style={styles.Number}>8</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            onPress={() => {
+              setData(a => (a += '9'));
+            }}>
+            <Text style={styles.Number}>9</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            onPress={() => {
+              setData(a => (a += '*'));
+            }}>
+            <Text style={styles.FontBtn}>x</Text>
+          </TouchableOpacity>
         </View>
         <View style={styles.BtnRow}>
-          <Text style={styles.FontBtn} onPress={() => setData(a => (a += '4'))}>
-            4
-          </Text>
-          <Text style={styles.FontBtn} onPress={() => setData(a => (a += '5'))}>
-            5
-          </Text>
-          <Text style={styles.FontBtn} onPress={() => setData(a => (a += '6'))}>
-            6
-          </Text>
-          <Text style={styles.FontBtn} onPress={() => setData(a => (a += '-'))}>
-            -
-          </Text>
+          <TouchableOpacity
+            onPress={() => {
+              setData(a => (a += '4'));
+            }}>
+            <Text style={styles.Number}>4</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            onPress={() => {
+              setData(a => (a += '5'));
+            }}>
+            <Text style={styles.Number}>5</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            onPress={() => {
+              setData(a => (a += '6'));
+            }}>
+            <Text style={styles.Number}>6</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            onPress={() => {
+              setData(a => (a += '-'));
+            }}>
+            <Text style={styles.FontBtn}>−</Text>
+          </TouchableOpacity>
         </View>
         <View style={styles.BtnRow}>
-          <Text style={styles.FontBtn} onPress={() => setData(a => (a += '1'))}>
-            1
-          </Text>
-          <Text style={styles.FontBtn} onPress={() => setData(a => (a += '2'))}>
-            2
-          </Text>
-          <Text style={styles.FontBtn} onPress={() => setData(a => (a += '3'))}>
-            3
-          </Text>
-          <Text style={styles.FontBtn} onPress={() => setData(a => (a += '+'))}>
-            +
-          </Text>
+          <TouchableOpacity
+            onPress={() => {
+              setData(a => (a += '1'));
+            }}>
+            <Text style={styles.Number}>1</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            onPress={() => {
+              setData(a => (a += '2'));
+            }}>
+            <Text style={styles.Number}>2</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            onPress={() => {
+              setData(a => (a += '3'));
+            }}>
+            <Text style={styles.Number}>3</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            onPress={() => {
+              setData(a => (a += '+'));
+            }}>
+            <Text style={styles.FontBtn}>+</Text>
+          </TouchableOpacity>
         </View>
         <View style={styles.BtnRow}>
           <Text style={styles.FontBtn}>+/-</Text>
-          <Text style={styles.FontBtn} onPress={() => setData(a => (a += '0'))}>
-            0
-          </Text>
-          <Text style={styles.FontBtn} onPress={() => setData(a => (a += '.'))}>
-            .
-          </Text>
-
-          <Text style={styles.FontBtn} onPress={result}>
-            =
-          </Text>
+          <TouchableOpacity
+            onPress={() => {
+              setData(a => (a += '0'));
+            }}>
+            <Text style={styles.Number}>0</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            onPress={() => {
+              setData(a => (a += '.'));
+            }}>
+            <Text style={styles.FontBtn}>.</Text>
+          </TouchableOpacity>
+          <TouchableOpacity onPress={result}>
+            <Text style={styles.result}>=</Text>
+          </TouchableOpacity>
         </View>
       </SafeAreaView>
     </View>
@@ -121,18 +242,14 @@ const styles = StyleSheet.create({
     width: '100%',
     height: '100%',
   },
-  text: {
-    color: '#fff',
-    fontSize: 20,
-    textAlign: 'center',
-  },
+
   input: {
-    marginTop: 20,
-    height: 90,
-    fontSize: 45,
+    marginTop: 10,
+    height: 110,
+    fontSize: 55,
     borderWidth: 1,
     textAlign: 'right',
-    color: '#fff',
+    color: '#0f9',
     padding: 8,
     letterSpacing: 2,
   },
@@ -161,17 +278,6 @@ const styles = StyleSheet.create({
     //flex: 1,
     flexDirection: 'row',
   },
-  crossllbtn: {
-    color: '#0fc',
-    alignItems: 'center',
-    textAlign: 'center',
-    fontSize: 30,
-    width: 40,
-    height: 40,
-    borderStyle: 'solid',
-    borderWidth: 1,
-    borderColor: '#0fc',
-  },
   BtnRow: {
     width: '100%',
     height: 80,
@@ -185,6 +291,39 @@ const styles = StyleSheet.create({
     height: 80,
     backgroundColor: '#333',
     color: '#0f3',
+    borderRadius: 40,
+    fontSize: 35,
+    textAlign: 'center',
+    textAlignVertical: 'center',
+  },
+  ReadArrow: {
+    marginRight: 20,
+  },
+  Clear: {
+    width: 80,
+    height: 80,
+    backgroundColor: '#333',
+    color: '#f03',
+    borderRadius: 40,
+    fontSize: 30,
+    textAlign: 'center',
+    textAlignVertical: 'center',
+  },
+  result: {
+    width: 80,
+    height: 80,
+    backgroundColor: '#5e3',
+    color: '#fff',
+    borderRadius: 40,
+    fontSize: 45,
+    textAlign: 'center',
+    textAlignVertical: 'center',
+  },
+  Number: {
+    width: 80,
+    height: 80,
+    backgroundColor: '#333',
+    color: '#fff',
     borderRadius: 40,
     fontSize: 30,
     textAlign: 'center',
