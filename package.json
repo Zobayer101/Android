@@ -10,8 +10,13 @@
     "test": "jest"
   },
   "dependencies": {
+    "@picovoice/react-native-voice-processor": "^1.2.2",
+    "@react-native-community/voice": "^1.1.9",
+    "@types/react-native-torch": "^1.1.2",
     "react": "18.3.1",
-    "react-native": "0.75.4"
+    "react-native": "0.75.4",
+    "react-native-torch": "^1.2.0",
+    "react-native-vosk": "^0.2.2"
   },
   "devDependencies": {
     "@babel/core": "^7.20.0",
